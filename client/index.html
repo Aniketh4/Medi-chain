@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Token Dapp</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Token app</h1>
+    <input type="text" id="tokenname1">
+    <input type="text" id="tokensymbol">
+    <input type="number" id="numberoftokens">
+    <input type="number" id="tokenvalue">
+    <button onclick="createToken()">Create token</button>
+
+    <h1>Transfer tokens here</h1>
+    <input type="text" id="tokenname2">
+    <input type="text" id="address2">
+    <input type="number" id="numberoftokens2">
+    <button onclick="transfer()">Transfer</button>
+
+    <h1>Buy tokens from someone here</h1>
+    <input type="text" id="tokenname3">
+    <input type="text" id="address3">
+    <input type="number" id="numberoftokens3">
+    <button onclick="buy()">Buy</button>
+
+    <script>
+        // Assuming you've already included Web3.js library in your HTML file
+
+        // Define the contract address and ABI
+        const contractAddress = '0xE729683a71E05A62e37C8FC4831B8AA39a296536'; // Replace with your actual contract address
+        const contractABI = [
+            {
+            "anonymous": false,
+            "inputs": [
+                {
+                "indexed": true,
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+                },
+                {
+                "indexed": true,
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+                },
+                {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+                }
+            ],
+            "name": "Transfer",
+            "type": "event"
+            },
+            {
+            "inputs": [
+                {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+                }
+            ],
+            "name": "tokens",
+            "outputs": [
+                {
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+                },
+                {
+                "internalType": "string",
+                "name": "symbol",
+                "type": "string"
+                },
+                {
+                "internalType": "uint256",
+                "name": "totalSupply",
+                "type": "uint256"
+                },
+                {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function",
+            "constant": true
+            },
+            {
+            "inputs": [
+                {
+                "internalType": "string",
+                "name": "_name",
+                "type": "string"
+                },
+                {
+                "internalType": "string",
+                "name": "_symbol",
+                "type": "string"
+                },
+                {
+                "internalType": "uint256",
+                "name": "_initialSupply",
+                "type": "uint256"
+                },
+                {
+                "internalType": "uint256",
+                "name": "_value",
+                "type": "uint256"
+                }
+            ],
+            "name": "createToken",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+            },
+            {
+            "inputs": [
+                {
+                "internalType": "string",
+                "name": "_name",
+                "type": "string"
+                },
+                {
+                "internalType": "address payable",
+                "name": "_from",
+                "type": "address"
+                },
+                {
+                "internalType": "uint256",
+                "name": "_value",
+                "type": "uint256"
+                }
+            ],
+            "name": "buyTokens",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function",
+            "payable": true
+            },
+            {
+            "inputs": [
+                {
+                "internalType": "string",
+                "name": "_name",
+                "type": "string"
+                },
+                {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+                },
+                {
+                "internalType": "uint256",
+                "name": "_value",
+                "type": "uint256"
+                }
+            ],
+            "name": "transfer",
+            "outputs": [
+                {
+                "internalType": "bool",
+                "name": "success",
+                "type": "bool"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+            }
+        ];
+
+    // Initialize Web3
+    let web3;
+
+    // Check if Web3 is already injected by MetaMask
+    if (typeof window.ethereum !== 'undefined') {
+        web3 = new Web3(window.ethereum);
+    } else {
+        // Handle case where user doesn't have MetaMask installed
+        alert('Please install MetaMask to interact with this application');
+    }
+
+    // Function to get the account address from MetaMask
+    async function getAccount() {
+        // Request account access from MetaMask
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log('Accounts:', accounts);
+        return accounts[0]; // Return the first account in the list of accounts
+    }
+
+    // Load the contract
+    const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+    // Function to create token
+    async function createToken() {
+        const sender = await getAccount();
+        console.log('Sender:', sender);
+
+        const tokenName = document.getElementById('tokenname1').value;
+        const tokenSymbol = document.getElementById('tokensymbol').value;
+        const initialSupply = document.getElementById('numberoftokens').value;
+        const tokenValue = document.getElementById('tokenvalue').value;
+
+        console.log('Creating token:', tokenName, tokenSymbol, initialSupply, tokenValue);
+
+        // Call the smart contract function
+        await contract.methods.createToken(tokenName, tokenSymbol, initialSupply, tokenValue).send({ from: sender });
+        console.log('Token created successfully!');
+    }
+
+    // Function to transfer tokens
+    async function transfer() {
+        const sender = await getAccount();
+        console.log('Sender:', sender);
+
+        const tokenName = document.getElementById('tokenname2').value;
+        const toAddress = document.getElementById('address2').value;
+        const amount = document.getElementById('numberoftokens2').value;
+
+        console.log('Transferring tokens:', tokenName, toAddress, amount);
+
+        // Call the smart contract function
+        await contract.methods.transfer(tokenName, toAddress, amount).send({ from: sender });
+        console.log('Tokens transferred successfully!');
+    }
+
+    // Function to buy tokens
+    async function buy() {
+        const sender = await getAccount();
+        console.log('Sender:', sender);
+
+        const tokenName = document.getElementById('tokenname3').value;
+        const fromAddress = document.getElementById('address3').value;
+        const amount = document.getElementById('numberoftokens3').value;
+
+        console.log('Buying tokens:', tokenName, fromAddress, amount);
+
+        // Call the smart contract function
+        await contract.methods.buyTokens(tokenName, fromAddress, amount).send({ from: sender, value: amount });
+        console.log('Tokens bought successfully!');
+    }
+    </script>
+</body>
+</html>
